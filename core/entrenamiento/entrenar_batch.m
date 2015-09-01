@@ -3,9 +3,9 @@ function [ matriz_entrenamiento, salidas_esperadas ] = entrenar_batch( hs, hr, m
 %datos de imágenes
 
 %Añade al path
-addpath('../../database/','../captura/','../estadistica/','../extraccion/','../interfaz/','../representacion/','../scripts/','../segmentacion/');
+addpath('../../database/','../../databaseEcu2/A/','../captura/','../estadistica/','../extraccion/','../interfaz/','../representacion/','../scripts/','../segmentacion/');
 %Obtiene la lista de imagenes en el directorio
-ImageList = getAllImages('../../database/*.jpg');
+ImageList = getAllImages('../../databaseEcu2/A/*.tif');
 dime = size(ImageList);
 total_muestras = dime(2);
 
@@ -38,7 +38,7 @@ for i = ImageList
     disp(Muestra);
     
     %Cargar la imagen
-    ruta_imagen = strcat('../../database/',nombreImagen);
+    ruta_imagen = strcat('../../databaseEcu2/A/',nombreImagen);
     estructura_imagen.imagen = imread(ruta_imagen);
     
     %redimensiona la imágen

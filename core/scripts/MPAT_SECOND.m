@@ -1,4 +1,4 @@
-function [ linea ] = MPAT_SECOND( muestra, umbral )
+function [ linea ] = MPAT_SECOND( muestra, umbral, signo )
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
     Nrgb_c=struct('r',0,'g',0,'b',0);
@@ -28,8 +28,11 @@ function [ linea ] = MPAT_SECOND( muestra, umbral )
     %Selecciona los píxeles posiciones de los pixeles del área de
     %interés, por cada canal separado.
     alterno=muestra.suave(:,:,2);
-    
-    mascara = (alterno<umbral);
+    if(strcmp(signo, 'menor') == 1)
+        mascara = (alterno<umbral);
+    else
+        mascara = (alterno>umbral);
+    end
 
     RGB_wR=RGB_c.R(mascara);
     RGB_wG=RGB_c.G(mascara);
