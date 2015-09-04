@@ -8,8 +8,8 @@ signo = 'mayor';
 formato = 'tif';
 
 %Añade al path
-dataPath = strcat(dataPath, '/');
-addpath(dataPath,'../captura/','../estadistica/','../extraccion/','../interfaz/','../representacion/','../scripts/','../segmentacion/','../extraccion/circular/');
+dataPath = strcat(dataPath, '\');
+addpath('../../captura/','../../estadistica/','../../extraccion/','../../interfaz/','../../representacion/','../../scripts/','../../segmentacion/','../../extraccion/circular/');
 %Obtiene la lista de imagenes en el directorio
 rutaGenerica = strcat(dataPath,'*.',formato);
 ImageList = getAllImages(rutaGenerica); %'../../databaseEcu2/A/*.tif');
