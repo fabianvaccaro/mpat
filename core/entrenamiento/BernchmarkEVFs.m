@@ -44,9 +44,6 @@ tm = size(combnk(clases,2));
 BONFF = zeros(tm(1),6,CantidadDeEVFs);
 ci = zeros(CantidadDeClases,2,CantidadDeEVFs);
 
-if isempty(gcp('nocreate'))
-    parpool(4);
-end
 for i=1:CantidadDeEVFs
     [p,tbl,~, results, ~, RHO,PVAL, Mmean, Mmed, Mstd, CI] = EstadisticosEVFs( EVFs_Divided, i, clases );
     lDescr = zeros(CantidadDeClases,3);
