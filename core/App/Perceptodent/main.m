@@ -22,7 +22,7 @@ function varargout = main(varargin)
 
 % Edit the above text to modify the response to help main
 
-% Last Modified by GUIDE v2.5 07-Sep-2015 15:39:29
+% Last Modified by GUIDE v2.5 13-Oct-2015 12:02:00
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -178,10 +178,12 @@ handles.designacion = {'MR', 'Mean of the R channel from RGB' ; ...
                         'NhI','Entropy of the histogram of the I channel from HSI'; ...
                         'CVOH', 'Circular variance of the Hue'};
                     
-handles.columnas = {'Description', 'Kol-Sm p-val', 'ANOVA p-val', 'Sp. Rho', 'Sp. p-val' };
+handles.columnas = {'Description','Short Name', 'Kolmogorov Smirnov p-val', 'ANOVA p-val', 'Spearman Rho', 'Spearman p-val', 'MCDA q-val' };
 handles.outputfile = 'Results.xlsx';
 handles.sigue = true;
 
+%Flag
+handles.flag = true;
 %Inicializa columnas en la tabla
 
 %Inicializa el archivo de salida
@@ -222,6 +224,7 @@ function pushbutton2_Callback(hObject, eventdata, handles)
 set(handles.pushbutton2, 'Enable', 'off');
 
 addpath('../../entrenamiento/');
+
 [ matriz_entrenamiento, salidas_esperadas, nombresArchivos ] = procesarDirectorio(handles.directorio, handles);
 
 [ StRes ] = BernchmarkEVFs( matriz_entrenamiento, salidas_esperadas ); 
@@ -235,11 +238,33 @@ handles = DefinirColumnas(StRes, handles.clases, handles);
 todoslosindices = 1:121;
 handles = pupularTabla(StRes, handles.clases, todoslosindices, handles);
 
-%guarda los resultados en una tabla
-writetable(handles.TablaFinal,handles.outputfile, 'WriteVariableNames', false);
+%Guarda los datos del alimentod e prueba en StRes
+StRes.NombreDescriptivo = get(handles.edit4, 'String');
+StRes.DetallesAlimento = get(handles.edit3, 'String');
+StRes.PaisOrigen = get(handles.edit5, 'String');
 
+%declaracion de variables globales
+
+StRes.TablaFinal= handles.TablaFinal;
+StRes.designacion = handles.designacion;
+
+%guarda los resultados en una tabla
+ writetable(handles.TablaFinal,handles.outputfile, 'WriteVariableNames', false);
+
+%almacena en disco los resultados de calibración
+calibration_filename = strcat('CB_',char(java.util.UUID.randomUUID), '.cbmat');
+save(calibration_filename, 'StRes');
 hold on;
 guidata(hObject, handles);
+
+%muestra resultados
+Results('StRes', StRes);
+
+%Cierra la ventana
+close(main);
+
+%muestra resultados
+
 
 function [ matriz_entrenamiento, salidas_esperadas, nombresArchivos ] = procesarDirectorio(dataPath, handles)
 %limpia pantalla
@@ -320,46 +345,61 @@ for i = 1:total_muestras
     %muestra el número de la muestra siendo procesada
     disp(N);
     %Cargar las imagenes
-    nombreImagenA = strcat(int2str(N),'-',int2str(C),'-A.tif');
-    nombreImagenB = strcat(int2str(N),'-',int2str(C),'-B.tif');
-    nombreImagenA_H = strcat(sprintf('%03d',N),'-',int2str(C),'-A.tif');
-    nombreImagenB_H = strcat(sprintf('%03d',N),'-',int2str(C),'-B.tif');
-    try
-        ruta_imagenA = strcat(dataPath, nombreImagenA);
-        ruta_imagenB = strcat(dataPath, nombreImagenB);
-        ImgInicial_A = imread(ruta_imagenA);
-        ImgInicial_B = imread(ruta_imagenB);
-    catch
-        ruta_imagenA = strcat(dataPath, nombreImagenA_H);
-        ruta_imagenB = strcat(dataPath, nombreImagenB_H);
-        ImgInicial_A = imread(ruta_imagenA);
-        ImgInicial_B = imread(ruta_imagenB);
+    %Verifica si ya existe una imagen preprocesada
+    nombreImagenProc = strcat(int2str(N),'-',int2str(C),'.mat');
+    if exist(nombreImagenProc, 'file') == 2
+        load(nombreImagenProc);
+        matriz_entrenamiento(i,:) = lineaCorta;
+        salidas_esperadas(i) = C;
+    else
+        nombreImagenA = strcat(int2str(N),'-',int2str(C),'-A.tif');
+        nombreImagenB = strcat(int2str(N),'-',int2str(C),'-B.tif');
+        nombreImagenA_H = strcat(sprintf('%03d',N),'-',int2str(C),'-A.tif');
+        nombreImagenB_H = strcat(sprintf('%03d',N),'-',int2str(C),'-B.tif');
+        try
+            ruta_imagenA = strcat(dataPath, nombreImagenA);
+            ruta_imagenB = strcat(dataPath, nombreImagenB);
+            ImgInicial_A = imread(ruta_imagenA);
+            ImgInicial_B = imread(ruta_imagenB);
+        catch
+            ruta_imagenA = strcat(dataPath, nombreImagenA_H);
+            ruta_imagenB = strcat(dataPath, nombreImagenB_H);
+            ImgInicial_A = imread(ruta_imagenA);
+            ImgInicial_B = imread(ruta_imagenB);
+        end
+        ComponenteR = ImgInicial_A(:,:,1);
+        ComponenteG = ImgInicial_A(:,:,2);
+        ComponenteB = ImgInicial_A(:,:,3);
+        estructura_imagen_A.imagen = cat(3, ComponenteR, ComponenteG, ComponenteB);
+        ComponenteR = ImgInicial_B(:,:,1);
+        ComponenteG = ImgInicial_B(:,:,2);
+        ComponenteB = ImgInicial_B(:,:,3);
+        estructura_imagen_B.imagen = cat(3, ComponenteR, ComponenteG, ComponenteB);
+        %redimensiona las imagenes
+        estructura_imagen_A.imagen = imresize(estructura_imagen_A.imagen, [300 NaN]);
+        estructura_imagen_B.imagen = imresize(estructura_imagen_B.imagen, [300 NaN]);
+        %Segmenta las imagenes
+        [estructura_imagen_A.suave, estructura_imagen_A.regiones, modes, regsize, grad, conf]= segmentar(estructura_imagen_A.imagen,hs,hr,minreg);
+        [estructura_imagen_B.suave, estructura_imagen_B.regiones, modes, regsize, grad, conf]= segmentar(estructura_imagen_B.imagen,hs,hr,minreg);
+        %Extrae características
+        umbral_A = calcularUmbral( estructura_imagen_A.suave(:,:,2) );
+        umbral_B = calcularUmbral( estructura_imagen_B.suave(:,:,2) );
+        linea_caracteristicas  = MPAT_DUAL( estructura_imagen_A, umbral_A,estructura_imagen_B, umbral_B, signo );
+        tama = size(linea_caracteristicas);
+        %registra la linea en la matriz de entrenamiento
+        lineaCorta = linea_caracteristicas(1,1:tama(2));
+        matriz_entrenamiento(i,:) = lineaCorta;
+        salidas_esperadas(i) = C;
+
+        %Guarda la imagen pre-procesada en un archivo .mat
+
+        filename_preproc = strcat(dataPath,nombreImagenProc);
+        save(filename_preproc,'lineaCorta');
     end
-    ComponenteR = ImgInicial_A(:,:,1);
-    ComponenteG = ImgInicial_A(:,:,2);
-    ComponenteB = ImgInicial_A(:,:,3);
-    estructura_imagen_A.imagen = cat(3, ComponenteR, ComponenteG, ComponenteB);
-    ComponenteR = ImgInicial_B(:,:,1);
-    ComponenteG = ImgInicial_B(:,:,2);
-    ComponenteB = ImgInicial_B(:,:,3);
-    estructura_imagen_B.imagen = cat(3, ComponenteR, ComponenteG, ComponenteB);
-    %redimensiona las imagenes
-    estructura_imagen_A.imagen = imresize(estructura_imagen_A.imagen, [300 NaN]);
-    estructura_imagen_B.imagen = imresize(estructura_imagen_B.imagen, [300 NaN]);
-    %Segmenta las imagenes
-    [estructura_imagen_A.suave, estructura_imagen_A.regiones, modes, regsize, grad, conf]= segmentar(estructura_imagen_A.imagen,hs,hr,minreg);
-    [estructura_imagen_B.suave, estructura_imagen_B.regiones, modes, regsize, grad, conf]= segmentar(estructura_imagen_B.imagen,hs,hr,minreg);
-    %Extrae características
-    umbral_A = calcularUmbral( estructura_imagen_A.suave(:,:,2) );
-    umbral_B = calcularUmbral( estructura_imagen_B.suave(:,:,2) );
-    linea_caracteristicas  = MPAT_DUAL( estructura_imagen_A, umbral_A,estructura_imagen_B, umbral_B, signo );
-    tama = size(linea_caracteristicas);
-    %registra la linea en la matriz de entrenamiento
-    matriz_entrenamiento(i,:) = linea_caracteristicas(1,1:tama(2));
-    salidas_esperadas(i) = C;
     
 end
-
+delete(h);
+% close(main);
 
 
 function handles = DefinirColumnas(StRes, clases, handles)
@@ -411,13 +451,14 @@ cont = 1;
 %itera entre los EVFs
 for i = Indices
     Datos(cont,1) = {char(handles.designacion(i,2))};
-    Datos(cont,2) ={StRes.KolmogorovSmirnov(i)};
-    Datos(cont,3) ={StRes.ANOVA_P(i)};
-    Datos(cont,4) ={StRes.SP_RHO(i)};
-    Datos(cont,5) ={StRes.SP_P(i)};
-    
+    Datos(cont,2) = {char(handles.designacion(i,1))};
+    Datos(cont,3) ={StRes.KolmogorovSmirnov(i)};
+    Datos(cont,4) ={StRes.ANOVA_P(i)};
+    Datos(cont,5) ={StRes.SP_RHO(i)};
+    Datos(cont,6) ={StRes.SP_P(i)};
+    Datos(cont,7) ={StRes.MCDA_Q(i)};
     %Conlumnas adicionales
-    posicion = 5;
+    posicion = 7;
     for j=1:CantidadDeClases
         posicion = posicion +1;
         Datos(cont,posicion) = {StRes.descriptivos(j,1,i)};
@@ -531,3 +572,72 @@ guidata(hObject, handles);
 
 function handles = cancelarEjecucion(handles)
 set(handles.btn_cancelarSalir,'UserData',1)
+
+
+
+function edit3_Callback(hObject, eventdata, handles)
+% hObject    handle to edit3 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit3 as text
+%        str2double(get(hObject,'String')) returns contents of edit3 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit3_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit3 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function edit4_Callback(hObject, eventdata, handles)
+% hObject    handle to edit4 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit4 as text
+%        str2double(get(hObject,'String')) returns contents of edit4 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit4_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit4 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function edit5_Callback(hObject, eventdata, handles)
+% hObject    handle to edit5 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit5 as text
+%        str2double(get(hObject,'String')) returns contents of edit5 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit5_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit5 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
