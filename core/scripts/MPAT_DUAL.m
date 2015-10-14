@@ -51,11 +51,11 @@ function [ linea ] = MPAT_DUAL( EstImA, umbral_A, EstImB, umbral_B, signo )
     alterno_A=EstImA.suave(:,:,2);
     alterno_B=EstImB.suave(:,:,2);
     if(strcmp(signo, 'menor') == 1)
-        mascara_A = (alterno_A<umbral_A);
-        mascara_B = (alterno_B<umbral_B);
+        mascara_A = (abs(alterno_A)<umbral_A);
+        mascara_B = (abs(alterno_B)<umbral_B);
     else
-        mascara_A = (alterno_A>umbral_A);
-        mascara_B = (alterno_B>umbral_B);
+        mascara_A = (abs(alterno_A)>umbral_A);
+        mascara_B = (abs(alterno_B)>umbral_B);
     end
 
     RGB_wR=[A_RGB_c.R(mascara_A);B_RGB_c.R(mascara_B)];

@@ -200,9 +200,13 @@ axes(handles.AxesA);
     'Image Files (*.jpg, *.tif, *.tiff, *.bmp)'},...
     'Select Image of side A',handles.PathNameLast);
 if(FileName ~= 0)
+    try
     handles.ladoA = imread([PathName,FileName]);
     imshow(handles.ladoA);
     handles.setA = true;
+    catch
+       h = msgbox('This image is invalid.  The current image includes a TRANSPARENCY layer that is incompatible with the analysis. For further informantion please read the Documentation.','Invalid image', 'warn'); 
+    end
     
     %actualiza el PathName
     handles.PathNameLast = PathName;
@@ -218,7 +222,10 @@ function Execute_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 addpath('../../captura/','../../estadistica/','../../extraccion/','../../interfaz/','../../representacion/','../../scripts/','../../segmentacion/','../../extraccion/circular/');
 if(handles.setA && handles.setB && handles.setCiclos && handles.setMPAT)
+    %abre la waitbar
+    hw = waitbar(0,'Please wait...');
     %Bloquea botones
+    waitbar(1 / 5, hw, 'Loading calibration');
     set(handles.Execute, 'Enable', 'off');
     set(handles.pushbutton1, 'Enable', 'off');
     set(handles.pushbutton2, 'Enable', 'off');
@@ -243,8 +250,11 @@ if(handles.setA && handles.setB && handles.setCiclos && handles.setMPAT)
     estructura_imagen_A.imagen = imresize(estructura_imagen_A.imagen, [300 NaN]);
     estructura_imagen_B.imagen = imresize(estructura_imagen_B.imagen, [300 NaN]);
     %Segmenta las imagenes
+    waitbar(2 / 5, hw, 'Segmenting image from side A');
     [estructura_imagen_A.suave, estructura_imagen_A.regiones, modes, regsize, grad, conf]= segmentar(estructura_imagen_A.imagen,hs,hr,minreg);
+    waitbar(3 / 5, hw, 'Segmenting image from side B');
     [estructura_imagen_B.suave, estructura_imagen_B.regiones, modes, regsize, grad, conf]= segmentar(estructura_imagen_B.imagen,hs,hr,minreg);
+    waitbar(4 / 5, hw, 'Analyzing mixture');
     %Extrae características
     umbral_A = calcularUmbral( estructura_imagen_A.suave(:,:,2) );
     umbral_B = calcularUmbral( estructura_imagen_B.suave(:,:,2) );
@@ -285,6 +295,7 @@ if(handles.setA && handles.setB && handles.setCiclos && handles.setMPAT)
     TURes.LB = cat(3,LB1, LB2, LB3);
     
     TUResults('TURes', TURes);
+    delete(hw);
     close(unitarytest);
 else
     if(handles.setMPAT == false)
