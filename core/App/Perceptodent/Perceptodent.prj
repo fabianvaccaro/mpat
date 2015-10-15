@@ -1,0 +1,155 @@
+<deployment-project plugin="plugin.ezdeploy" plugin-version="1.0">
+  <configuration build-checksum="4151811568" file="C:\projects\matlab\aident\mpat\core\App\Perceptodent\Perceptodent.prj" location="C:\projects\matlab\aident\mpat\core\App\Perceptodent" name="Perceptodent" preferred-package-location="C:\projects\matlab\aident\mpat\core\App\Perceptodent\Perceptodent\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
+    <param.appname>Perceptodent</param.appname>
+    <param.icon />
+    <param.icons />
+    <param.version>1.0</param.version>
+    <param.authnamewatermark>Gustavo Vaccaro Witt; José Ignacio Peláez</param.authnamewatermark>
+    <param.email>fabianvaccaro@correo.ugr.es</param.email>
+    <param.company>University of Malaga</param.company>
+    <param.summary>Masticatory Performance assesment toolbox.</param.summary>
+    <param.description>This MATLAB scritp is intended for selecting the best image processing method for the two-coloured chewing gums mixing test. Additionally, clinicians can perform Unitary Masticatory Performance Tests using a single sample of two-coloured chewing gums.</param.description>
+    <param.screenshot>${PROJECT_ROOT}\splash.png</param.screenshot>
+    <param.guid />
+    <param.net.saved.interface />
+    <param.installpath.string>\University of Malaga\Perceptodent\</param.installpath.string>
+    <param.installpath.combo>option.installpath.programfiles</param.installpath.combo>
+    <param.logo>${PROJECT_ROOT}\icon.png</param.logo>
+    <param.install.notes />
+    <param.intermediate>${PROJECT_ROOT}\Perceptodent\for_testing</param.intermediate>
+    <param.files.only>${PROJECT_ROOT}\Perceptodent\for_redistribution_files_only</param.files.only>
+    <param.output>${PROJECT_ROOT}\Perceptodent\for_redistribution</param.output>
+    <param.enable.clean.build>false</param.enable.clean.build>
+    <param.user.defined.mcr.options />
+    <param.embed.ctf>true</param.embed.ctf>
+    <param.target.type>subtarget.standalone</param.target.type>
+    <param.support.packages />
+    <param.required.mcr.products>
+      <item>35000</item>
+      <item>35010</item>
+      <item>35001</item>
+    </param.required.mcr.products>
+    <param.web.mcr>true</param.web.mcr>
+    <param.package.mcr>true</param.package.mcr>
+    <param.no.mcr>false</param.no.mcr>
+    <param.web.mcr.name>MyAppInstaller_web</param.web.mcr.name>
+    <param.package.mcr.name>MyAppInstaller_mcr</param.package.mcr.name>
+    <param.no.mcr.name>MyAppInstaller_app</param.no.mcr.name>
+    <param.windows.command.prompt>true</param.windows.command.prompt>
+    <param.create.log>false</param.create.log>
+    <param.log.file />
+    <unset>
+      <param.icon />
+      <param.icons />
+      <param.version />
+      <param.guid />
+      <param.net.saved.interface />
+      <param.installpath.string />
+      <param.installpath.combo />
+      <param.intermediate />
+      <param.files.only />
+      <param.output />
+      <param.enable.clean.build />
+      <param.user.defined.mcr.options />
+      <param.embed.ctf />
+      <param.target.type />
+      <param.support.packages />
+      <param.web.mcr />
+      <param.no.mcr />
+      <param.web.mcr.name />
+      <param.package.mcr.name />
+      <param.no.mcr.name />
+      <param.windows.command.prompt />
+      <param.create.log />
+      <param.log.file />
+    </unset>
+    <fileset.main>
+      <file>${PROJECT_ROOT}\Panel.m</file>
+    </fileset.main>
+    <fileset.resources>
+      <file>${PROJECT_ROOT}\CB_459aac75-de5f-49e6-9b5a-d17a8a12f396.cbmat</file>
+      <file>${PROJECT_ROOT}\logo_lcc.png</file>
+      <file>${PROJECT_ROOT}\LogoUma.png</file>
+      <file>${PROJECT_ROOT}\main.fig</file>
+      <file>${PROJECT_ROOT}\main.m</file>
+      <file>${PROJECT_ROOT}\Panel.fig</file>
+      <file>${PROJECT_ROOT}\Results.fig</file>
+      <file>${PROJECT_ROOT}\Results.m</file>
+      <file>${PROJECT_ROOT}\sidea.png</file>
+      <file>${PROJECT_ROOT}\sideb.png</file>
+      <file>${PROJECT_ROOT}\TUResults.fig</file>
+      <file>${PROJECT_ROOT}\TUResults.m</file>
+      <file>${PROJECT_ROOT}\unitarytest.fig</file>
+      <file>${PROJECT_ROOT}\unitarytest.m</file>
+      <file>${PROJECT_ROOT}\universidad-de-malaga.png</file>
+      <file>C:\projects\matlab\aident\mpat\core\captura\getAllImages.m</file>
+      <file>C:\projects\matlab\aident\mpat\core\entrenamiento\BernchmarkEVFs.m</file>
+      <file>C:\projects\matlab\aident\mpat\core\entrenamiento\EstadisticosEVFs.m</file>
+      <file>C:\projects\matlab\aident\mpat\core\extraccion\circular\circ_ang2rad.m</file>
+      <file>C:\projects\matlab\aident\mpat\core\extraccion\circular\circ_r.m</file>
+      <file>C:\projects\matlab\aident\mpat\core\extraccion\circular\circ_var.m</file>
+      <file>C:\projects\matlab\aident\mpat\core\extraccion\CirVar.m</file>
+      <file>C:\projects\matlab\aident\mpat\core\extraccion\dosmax.m</file>
+      <file>C:\projects\matlab\aident\mpat\core\extraccion\energia.m</file>
+      <file>C:\projects\matlab\aident\mpat\core\extraccion\extraerCaracteristicas.m</file>
+      <file>C:\projects\matlab\aident\mpat\core\extraccion\normRGB.m</file>
+      <file>C:\projects\matlab\aident\mpat\core\scripts\MPAT_DUAL.m</file>
+      <file>C:\projects\matlab\aident\mpat\core\segmentacion\calcularUmbral.m</file>
+      <file>C:\projects\matlab\aident\mpat\core\segmentacion\edison_wrapper.m</file>
+      <file>C:\projects\matlab\aident\mpat\core\segmentacion\edison_wrapper_mex.mexw64</file>
+      <file>C:\projects\matlab\aident\mpat\core\segmentacion\RGB2Luv.m</file>
+      <file>C:\projects\matlab\aident\mpat\core\segmentacion\segmentar.m</file>
+    </fileset.resources>
+    <fileset.package />
+    <build-deliverables>
+      <file location="${PROJECT_ROOT}\Perceptodent\for_testing" name="Perceptodent.exe" optional="false">C:\projects\matlab\aident\mpat\core\App\Perceptodent\Perceptodent\for_testing\Perceptodent.exe</file>
+      <file location="${PROJECT_ROOT}\Perceptodent\for_testing" name="splash.png" optional="false">C:\projects\matlab\aident\mpat\core\App\Perceptodent\Perceptodent\for_testing\splash.png</file>
+      <file location="${PROJECT_ROOT}\Perceptodent\for_testing" name="readme.txt" optional="true">C:\projects\matlab\aident\mpat\core\App\Perceptodent\Perceptodent\for_testing\readme.txt</file>
+    </build-deliverables>
+    <workflow />
+    <matlab>
+      <root>C:\Program Files\MATLAB\MATLAB Production Server\R2015a</root>
+      <toolboxes>
+        <toolbox name="matlabhdlcoder" />
+        <toolbox name="fixedpoint" />
+        <toolbox name="embeddedcoder" />
+        <toolbox name="matlabcoder" />
+      </toolboxes>
+      <toolbox>
+        <matlabhdlcoder>
+          <enabled>true</enabled>
+        </matlabhdlcoder>
+      </toolbox>
+      <toolbox>
+        <fixedpoint>
+          <enabled>true</enabled>
+        </fixedpoint>
+      </toolbox>
+      <toolbox>
+        <embeddedcoder>
+          <enabled>true</enabled>
+        </embeddedcoder>
+      </toolbox>
+      <toolbox>
+        <matlabcoder>
+          <enabled>true</enabled>
+        </matlabcoder>
+      </toolbox>
+    </matlab>
+    <platform>
+      <unix>false</unix>
+      <mac>false</mac>
+      <windows>true</windows>
+      <win2k>false</win2k>
+      <winxp>false</winxp>
+      <vista>false</vista>
+      <linux>false</linux>
+      <solaris>false</solaris>
+      <osver>6.2</osver>
+      <os32>false</os32>
+      <os64>true</os64>
+      <arch>win64</arch>
+      <matlab>true</matlab>
+    </platform>
+  </configuration>
+</deployment-project>

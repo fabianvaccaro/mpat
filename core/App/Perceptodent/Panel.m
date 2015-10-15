@@ -95,7 +95,20 @@ function pushbutton1_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-unitarytest();
+
+%Busca todos los archivos de calibración
+CalibrationFiles=dir(fullfile('.','*.cbmat'));
+%Genera una lista con los nombres de los archivos de calibacion y su
+%descripcion
+[sorted_names,sorted_index] = sortrows({CalibrationFiles.name}');
+dime = size(CalibrationFiles);
+CantidadCalibraciones = dime(1);
+handles.ListaCalibraciones = cell(CantidadCalibraciones,5);
+if(CantidadCalibraciones<1)
+     h = msgbox('There are no calibration files. You must calibrate the application before doing Unitary Tests','Calibration files needed', 'warn');
+else
+    unitarytest();
+end
 
 % --- Executes on button press in btn_calibrate.
 function btn_calibrate_Callback(hObject, eventdata, handles)
@@ -116,6 +129,7 @@ function About_Callback(hObject, eventdata, handles)
 % hObject    handle to About (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+web('http://www.perceptodent.lcc.uma.es');
 
 
 % --------------------------------------------------------------------
@@ -123,3 +137,4 @@ function Documentation_Callback(hObject, eventdata, handles)
 % hObject    handle to Documentation (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+web('http://www.perceptodent.lcc.uma.es/documentation/index.htm');

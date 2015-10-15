@@ -69,7 +69,7 @@ for i=1:CantidadDeEVFs
     CantidadPares = size(results);
     CantidadPares = CantidadPares(1);
     for j = bnff'
-        if (j>0.05)
+        if (j<0.01)
             Gammaz = Gammaz + 1;
         end
     end
@@ -85,8 +85,9 @@ Ultimo = 0;
 for k=1:CantidadDeEVFs
     if(MCDA_Q(k) > Ultimo)
         Optimal = k;
+        Ultimo = MCDA_Q(k);
     end
-    Ultimo = MCDA_Q(k);
+    
     
 end
 

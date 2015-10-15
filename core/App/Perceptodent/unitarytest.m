@@ -57,9 +57,9 @@ handles.setA = false;
 handles.setB = false;
 handles.setCiclos = false;
 handles.setMPAT = false;
-handles.PathNameLast = './';
+handles.PathNameLast = '.';
 %Busca todos los archivos de calibración
-CalibrationFiles=dir(fullfile('./','*.cbmat'));
+CalibrationFiles=dir(fullfile('.','*.cbmat'));
 %Genera una lista con los nombres de los archivos de calibacion y su
 %descripcion
 [sorted_names,sorted_index] = sortrows({CalibrationFiles.name}');
@@ -80,13 +80,18 @@ ListaIndex = 1:CantidadCalibraciones;
 
 %Carga la primera MPAT si estád disponible
 set(handles.listbox1,'String',handles.ListaCalibraciones(:,2),'Value',1)
-handles = cargarMPAT(hObject, handles);
+try
+    handles = cargarMPAT(hObject, handles);
+catch
+    h = msgbox('There are no calibration files. You must calibrate the application before doing Unitary Tests','Calibration files needed', 'warn');
+    handles.banderaCerrar = true;
+end
 
 %Muestra las imágenes de prueba iniciales
-imsidea= imread('./sidea.png');
+imsidea= imread('sidea.png');
 axes(handles.AxesA);
 imshow(imsidea);
-imsideb= imread('./sideb.png');
+imsideb= imread('sideb.png');
 axes(handles.AxesB);
 imshow(imsideb);
 
@@ -108,8 +113,8 @@ function varargout = unitarytest_OutputFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Get default command line output from handles structure
-varargout{1} = handles.output;
-
+%varargout{1} = handles.output;
+varargout{1} = 0;
 
 % --- Executes on selection change in listbox1.
 function listbox1_Callback(hObject, eventdata, handles)

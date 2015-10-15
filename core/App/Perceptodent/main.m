@@ -335,8 +335,8 @@ for i = 1:total_muestras
         break
     end
     %actualiza la barra de espera
-    lnd = ['Sample ' int2str(i) ' of ' int2str(total_muestras)];
-    waitbar(i / total_muestras, h, lnd);
+    lnd = ['Processing sample ' int2str(i) ' of ' int2str(total_muestras)];
+    waitbar(i / (total_muestras+3), h, lnd);
     estructura_imagen_A=struct('imagen',0,'suave',0, 'regiones',0,'features',0,'etiquetas', 0, 'marcas', 0);
     estructura_imagen_B=struct('imagen',0,'suave',0, 'regiones',0,'features',0,'etiquetas', 0, 'marcas', 0);
     S = MuestrasPares(i,:);
@@ -398,6 +398,7 @@ for i = 1:total_muestras
     end
     
 end
+waitbar(i+2 / (total_muestras+3), h, 'Exporting results');
 delete(h);
 % close(main);
 
@@ -567,8 +568,8 @@ function btn_cancelarSalir_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 handles = cancelarEjecucion(handles);
-close all;
 guidata(hObject, handles);
+close (main);
 
 function handles = cancelarEjecucion(handles)
 set(handles.btn_cancelarSalir,'UserData',1)
