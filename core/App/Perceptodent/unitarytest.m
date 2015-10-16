@@ -59,7 +59,7 @@ handles.setCiclos = false;
 handles.setMPAT = false;
 handles.PathNameLast = '.';
 %Busca todos los archivos de calibración
-CalibrationFiles=dir(fullfile('.','*.cbmat'));
+CalibrationFiles=dir(fullfile('./Calibrations','*.cbmat'));
 %Genera una lista con los nombres de los archivos de calibacion y su
 %descripcion
 [sorted_names,sorted_index] = sortrows({CalibrationFiles.name}');
@@ -68,7 +68,7 @@ CantidadCalibraciones = dime(1);
 handles.ListaCalibraciones = cell(CantidadCalibraciones,5);
 for j = 1:CantidadCalibraciones
     %carga archivo
-    load(char(sorted_names(j)),'-mat');
+    load(['./Calibrations/', char(sorted_names(j))],'-mat');
     handles.ListaCalibraciones(j,1) = {sorted_names(j)};
     handles.ListaCalibraciones(j,2) = {StRes.NombreDescriptivo};
     handles.ListaCalibraciones(j,3) = {StRes.DetallesAlimento};
@@ -135,7 +135,7 @@ index_selected = get(handles.listbox1,'Value');
 %disp(index_selected);
 Calib = handles.ListaCalibraciones(index_selected);
 try
-    ruta_calibracion = char(Calib{1,1}{1,1});
+    ruta_calibracion = ['./Calibrations/', char(Calib{1,1}{1,1})];
     load(ruta_calibracion, '-mat');
     handles.StRes = StRes;
     set(handles.listbox2,'Enable','on');
@@ -301,7 +301,7 @@ if(handles.setA && handles.setB && handles.setCiclos && handles.setMPAT)
     
     TUResults('TURes', TURes);
     delete(hw);
-    close(unitarytest);
+    delete(handles.figure1);
 else
     if(handles.setMPAT == false)
         h = msgbox('You need to select a calibration file first','Calibration needed', 'warn');

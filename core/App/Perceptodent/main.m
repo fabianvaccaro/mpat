@@ -252,7 +252,7 @@ StRes.designacion = handles.designacion;
  writetable(handles.TablaFinal,handles.outputfile, 'WriteVariableNames', false);
 
 %almacena en disco los resultados de calibración
-calibration_filename = strcat('CB_',char(java.util.UUID.randomUUID), '.cbmat');
+calibration_filename = strcat('./Calibrations/CB_',char(java.util.UUID.randomUUID), '.cbmat');
 save(calibration_filename, 'StRes');
 hold on;
 guidata(hObject, handles);

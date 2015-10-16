@@ -53,6 +53,15 @@ function Panel_OpeningFcn(hObject, eventdata, handles, varargin)
 % varargin   command line arguments to Panel (see VARARGIN)
 
 
+%Verifica que exista el directorio de calibracion
+A = exist('./Calibrations');
+if(A~=7)
+    mkdir('Calibrations');
+    load('CB_Default.cbmat', '-mat');
+    save('./Calibrations/CB_Default.cbmat', 'StRes');
+    %copyfile('CB_Default.cbmat','./Calibrations/CB_Default.cbmat', 'f');
+end
+
 
 %Cargar imagenes
 LogoUma = imread('LogoUma.png');
@@ -97,7 +106,7 @@ function pushbutton1_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 %Busca todos los archivos de calibración
-CalibrationFiles=dir(fullfile('.','*.cbmat'));
+CalibrationFiles=dir(fullfile('./Calibrations','*.cbmat'));
 %Genera una lista con los nombres de los archivos de calibacion y su
 %descripcion
 [sorted_names,sorted_index] = sortrows({CalibrationFiles.name}');
