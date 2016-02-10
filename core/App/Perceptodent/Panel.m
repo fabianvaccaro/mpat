@@ -54,11 +54,16 @@ function Panel_OpeningFcn(hObject, eventdata, handles, varargin)
 
 
 %Verifica que exista el directorio de calibracion
-A = exist('./Calibrations');
+userProfile = getenv('USERPROFILE');
+myDocsFolder = sprintf('%s\\Documents', userProfile);
+calibrationFolder = sprintf('%s\\MPATCalibrations', myDocsFolder);
+handles.calibrationFolder = calibrationFolder;
+A = exist(calibrationFolder);
 if(A~=7)
-    mkdir('Calibrations');
+    mkdir(calibrationFolder);
     load('CB_Default.cbmat', '-mat');
-    save('./Calibrations/CB_Default.cbmat', 'StRes');
+    cbpath = sprintf('%s\\CB_Default.cbmat', calibrationFolder);
+    save(cbpath, 'StRes');
     %copyfile('CB_Default.cbmat','./Calibrations/CB_Default.cbmat', 'f');
 end
 
@@ -106,7 +111,7 @@ function pushbutton1_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 %Busca todos los archivos de calibración
-CalibrationFiles=dir(fullfile('./Calibrations','*.cbmat'));
+CalibrationFiles=dir(fullfile(handles.calibrationFolder,'*.cbmat'));
 %Genera una lista con los nombres de los archivos de calibacion y su
 %descripcion
 [sorted_names,sorted_index] = sortrows({CalibrationFiles.name}');

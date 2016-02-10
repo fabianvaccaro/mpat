@@ -73,10 +73,11 @@ function [ linea ] = MPAT_DUAL( EstImA, umbral_A, EstImB, umbral_B, signo )
     
     %Estadísticas circulares
     [ cvarh ] = CirVar( HSV_wH );
+    [ sdhue ] = sqrt(cvarh);
     
     %Extraer caracteristicas de cada grupo y las registra en una
     %fila de la matriz de características
-    linea=[extraerCaracteristicas(RGB_wR), extraerCaracteristicas(RGB_wG), extraerCaracteristicas(RGB_wB),extraerCaracteristicas(iLuv_wL),extraerCaracteristicas(iLuv_wu),extraerCaracteristicas(iLuv_wv),extraerCaracteristicas(Nrgb_wr),extraerCaracteristicas(Nrgb_wg),extraerCaracteristicas(Nrgb_wb),extraerCaracteristicas(HSV_wH),extraerCaracteristicas(HSV_wS),extraerCaracteristicas(HSV_wV), cvarh];
+    linea=[extraerCaracteristicas(RGB_wR), extraerCaracteristicas(RGB_wG), extraerCaracteristicas(RGB_wB),extraerCaracteristicas(iLuv_wL),extraerCaracteristicas(iLuv_wu),extraerCaracteristicas(iLuv_wv),extraerCaracteristicas(Nrgb_wr),extraerCaracteristicas(Nrgb_wg),extraerCaracteristicas(Nrgb_wb),extraerCaracteristicas(HSV_wH),extraerCaracteristicas(HSV_wS),extraerCaracteristicas(HSV_wV), cvarh, sdhue];
 
 
     

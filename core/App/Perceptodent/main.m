@@ -56,6 +56,10 @@ function main_OpeningFcn(hObject, eventdata, handles, varargin)
 handles.output = hObject;
 
 %inicializacion de variables
+userProfile = getenv('USERPROFILE');
+myDocsFolder = sprintf('%s\\Documents', userProfile);
+calibrationFolder = sprintf('%s\\MPATCalibrations', myDocsFolder);
+handles.calibrationFolder = calibrationFolder;
 handles.designacion = {'MR', 'Mean of the R channel from RGB' ; ...
                         'VR','Variance of the R channel from RGB'; ...
                         'P1R','Position of the highest peak of the histogram of the R channel from RGB'; ...
@@ -176,11 +180,13 @@ handles.designacion = {'MR', 'Mean of the R channel from RGB' ; ...
                         'ShI','Skewness of the histogram of the I channel from HSI'; ...
                         'EhI','Energy of the histogram of the I channel from HSI'; ...
                         'NhI','Entropy of the histogram of the I channel from HSI'; ...
-                        'CVOH', 'Circular variance of the Hue'};
+                        'CVOH', 'Circular variance of the Hue'; ...
+                        'SDhue', 'Circular Standard Deviation of the Hue'};
                     
 handles.columnas = {'Description','Short Name', 'Kolmogorov Smirnov p-val', 'ANOVA p-val', 'Spearman Rho', 'Spearman p-val', 'MCDA q-val' };
-handles.outputfile = 'Results.xlsx';
+handles.outputfile = '...';
 handles.sigue = true;
+handles.directorio = '...';
 
 %Flag
 handles.flag = true;
@@ -224,181 +230,213 @@ function pushbutton2_Callback(hObject, eventdata, handles)
 set(handles.pushbutton2, 'Enable', 'off');
 
 addpath('../../entrenamiento/');
+%Verifica que se haya seleccionado un directorio
+trm = size(handles.directorio);
+if(trm(2)>4)
+    %Verifica que se haya seleccionado un archivo de salida
+    trm = size(handles.outputfile);
+    if(trm(2)>4)
+        %procesa el directorio
+        [ matriz_entrenamiento, salidas_esperadas, nombresArchivos ] = procesarDirectorio(handles.directorio, handles);
+        %verifica que existan suficientes muestras para ser procesadas
+        tmm = size(nombresArchivos);
+        if(tmm(1) > 2)
+            [ StRes ] = BernchmarkEVFs( matriz_entrenamiento, salidas_esperadas ); 
+            [handles.VALIDATED_Indexes, handles.OMPI_Index] = GetVALIDATED(StRes);
+            handles.clases = unique(salidas_esperadas);
+            handles.StRes = StRes;
+            %actualiza las columnas
+            handles = DefinirColumnas(StRes, handles.clases, handles);
 
-[ matriz_entrenamiento, salidas_esperadas, nombresArchivos ] = procesarDirectorio(handles.directorio, handles);
+            %inicializa la tabla con todos los EVF
+            todoslosindices = 1:122;
+            handles = pupularTabla(StRes, handles.clases, todoslosindices, handles);
 
-[ StRes ] = BernchmarkEVFs( matriz_entrenamiento, salidas_esperadas ); 
-[handles.VALIDATED_Indexes, handles.OMPI_Index] = GetVALIDATED(StRes);
-handles.clases = unique(salidas_esperadas);
-handles.StRes = StRes;
-%actualiza las columnas
-handles = DefinirColumnas(StRes, handles.clases, handles);
+            %Guarda los datos del alimentod e prueba en StRes
+            StRes.NombreDescriptivo = get(handles.edit4, 'String');
+            StRes.DetallesAlimento = get(handles.edit3, 'String');
+            StRes.PaisOrigen = get(handles.edit5, 'String');
 
-%inicializa la tabla con todos los EVF
-todoslosindices = 1:121;
-handles = pupularTabla(StRes, handles.clases, todoslosindices, handles);
+            %declaracion de variables globales
 
-%Guarda los datos del alimentod e prueba en StRes
-StRes.NombreDescriptivo = get(handles.edit4, 'String');
-StRes.DetallesAlimento = get(handles.edit3, 'String');
-StRes.PaisOrigen = get(handles.edit5, 'String');
+            StRes.TablaFinal= handles.TablaFinal;
+            StRes.designacion = handles.designacion;
 
-%declaracion de variables globales
+            %guarda los resultados en una tabla
+             writetable(handles.TablaFinal,handles.outputfile, 'WriteVariableNames', false);
 
-StRes.TablaFinal= handles.TablaFinal;
-StRes.designacion = handles.designacion;
+            %almacena en disco los resultados de calibración
+            calibration_filename = sprintf('%s\\%s%s', handles.calibrationFolder,char(java.util.UUID.randomUUID), '.cbmat');
+            save(calibration_filename, 'StRes');
+            hold on;
+            guidata(hObject, handles);
 
-%guarda los resultados en una tabla
- writetable(handles.TablaFinal,handles.outputfile, 'WriteVariableNames', false);
+            %muestra resultados
+            Results('StRes', StRes);
+            %Cierra la ventana
+            close(main);
+        else
+            alert_h = msgbox('Error E104: Insuficient samples or badly labeled, please see the Documentation for more information');
+            set(handles.pushbutton2, 'Enable', 'on');
+        end
+    else
+        alert_h = msgbox('Error E103: Results file not specified, please see the Documentation for more information');
+        set(handles.pushbutton2, 'Enable', 'on');
+    end
+else
+    alert_h = msgbox('Error E102: Samples directory not specified, please see the Documentation for more information');
+    set(handles.pushbutton2, 'Enable', 'on');
+end
 
-%almacena en disco los resultados de calibración
-calibration_filename = strcat('./Calibrations/CB_',char(java.util.UUID.randomUUID), '.cbmat');
-save(calibration_filename, 'StRes');
-hold on;
-guidata(hObject, handles);
 
-%muestra resultados
-Results('StRes', StRes);
 
-%Cierra la ventana
-close(main);
 
-%muestra resultados
+
+
 
 
 function [ matriz_entrenamiento, salidas_esperadas, nombresArchivos ] = procesarDirectorio(dataPath, handles)
 %limpia pantalla
 clc
-% %Matlab Pool
-% if isempty(gcp('nocreate'))
-%     parpool(2);
-% end
-%Toma en cuenta ambos lados de la muestra
-hs = 20;
-hr = 10;
-minreg = 4;
-signo = 'mayor';
-formato = 'tif';
+
+%Parámetros iniciales
+hs = 20;    %Radio Espacial de segmentación
+hr = 10;    %Radio de color de segmentación
+minreg = 4; %Cantidad mínima de regiones
+signo = 'mayor';    %Dirección de enmascaramiento (algoritmo de threshold)
+formato = 'tif';    %Formato de las imágenes a ser procesadas
 
 %Añade al path
 dataPath = strcat(dataPath, '\');
 addpath(dataPath, '../../captura/','../../estadistica/','../../extraccion/','../../interfaz/','../../representacion/','../../scripts/','../../segmentacion/','../../extraccion/circular/');
+
 %Obtiene la lista de imagenes en el directorio
 rutaGenerica = strcat(dataPath,'*.',formato);
 ImageList = getAllImages(rutaGenerica);
 MuestrasPares = [];
 dime = size(ImageList);
 
-%Verificar que las muestras sean pares
-for j =1:dime(2)
-    temporal = ImageList(j);
-    %transforma cell array  -> char
-    nombreImagen = char(temporal);
-    %separa el número de muestra
-    temporal = strsplit(nombreImagen,'-');
-    Muestra = str2num(char(temporal(1)));
-    %separa el numero de ciclos
-    Ciclos = str2num(char(temporal(2)));
-    %separa el lado
-    temporal = temporal(3);
-    temporal = strsplit(char(temporal),'.');
-    Lado = char(temporal(1));
-    %verifica si existe la pareja
-    if(Lado=='A')
-        pareja_N = strcat(int2str(Muestra),'-',int2str(Ciclos),'-B.tif');
-        pareja_H = strcat(sprintf('%03d',Muestra),'-',int2str(Ciclos),'-B.tif');
-        if exist(pareja_N, 'file') == 2 || exist(pareja_H, 'file') == 2
-            %añade la muestra a la lista para su analisis
-            MuestrasPares = [MuestrasPares ; Muestra, Ciclos];
+%Verifica que existan archivos suficientes
+if (dime(2) > 2)
+    %Verificar que las muestras sean pares
+    for j =1:dime(2)
+        temporal = ImageList(j);
+        %transforma cell array  -> char
+        nombreImagen = char(temporal);
+        %divide el nombre de la imagen por el delimitador "-"
+        temporal = strsplit(nombreImagen,'-');
+        %verifica que el nombre de la imagen se divida en 3 porciones por el delimitador "-"
+        tmm = size(temporal);
+        if (tmm(2) ~= 3)
+            continue;  
+        end
+        %separa el número de muestra
+        Muestra = str2num(char(temporal(1)));
+        %separa el numero de ciclos
+        Ciclos = str2num(char(temporal(2)));
+        %separa el lado
+        temporal = temporal(3);
+        temporal = strsplit(char(temporal),'.');
+        Lado = char(temporal(1));
+        %verifica si existe la pareja
+        if(Lado=='A')
+            pareja_N = strcat(int2str(Muestra),'-',int2str(Ciclos),'-B.tif');
+            pareja_H = strcat(sprintf('%03d',Muestra),'-',int2str(Ciclos),'-B.tif');
+            if exist(pareja_N, 'file') == 2 || exist(pareja_H, 'file') == 2
+                %añade la muestra a la lista para su analisis
+                MuestrasPares = [MuestrasPares ; Muestra, Ciclos];
+            end
         end
     end
 end
+
 %el total de muestras es la cantidad de parejas existentes
 total_muestras = size(MuestrasPares);
 total_muestras = total_muestras(1);
 %Declaración de variables
-matriz_entrenamiento = zeros(total_muestras, 121);
+matriz_entrenamiento = zeros(total_muestras, 122);
 salidas_esperadas = zeros(total_muestras,1);
 nombresArchivos = cell(total_muestras,1);
 %Muestra la barra de espera
 h = waitbar(0,'Please wait...','CreateCancelBtn','setappdata(gcbf,''canceling'',1)');
 setappdata(h,'canceling',0);
 %Itera entre las muestras de la base de datos
-for i = 1:total_muestras
-    %Verifica si la bandera de terminar está activada
-    if get(handles.btn_cancelarSalir,'UserData')
-        delete(h);
-        break
-    end
-    if getappdata(h,'canceling')
-        delete(h);
-        break
-    end
-    %actualiza la barra de espera
-    lnd = ['Processing sample ' int2str(i) ' of ' int2str(total_muestras)];
-    waitbar(i / (total_muestras+3), h, lnd);
-    estructura_imagen_A=struct('imagen',0,'suave',0, 'regiones',0,'features',0,'etiquetas', 0, 'marcas', 0);
-    estructura_imagen_B=struct('imagen',0,'suave',0, 'regiones',0,'features',0,'etiquetas', 0, 'marcas', 0);
-    S = MuestrasPares(i,:);
-    N= S(1);
-    C = S(2);
-    %muestra el número de la muestra siendo procesada
-    disp(N);
-    %Cargar las imagenes
-    %Verifica si ya existe una imagen preprocesada
-    nombreImagenProc = strcat(int2str(N),'-',int2str(C),'.mat');
-    if exist(nombreImagenProc, 'file') == 2
-        load(nombreImagenProc);
-        matriz_entrenamiento(i,:) = lineaCorta;
-        salidas_esperadas(i) = C;
-    else
-        nombreImagenA = strcat(int2str(N),'-',int2str(C),'-A.tif');
-        nombreImagenB = strcat(int2str(N),'-',int2str(C),'-B.tif');
-        nombreImagenA_H = strcat(sprintf('%03d',N),'-',int2str(C),'-A.tif');
-        nombreImagenB_H = strcat(sprintf('%03d',N),'-',int2str(C),'-B.tif');
-        try
-            ruta_imagenA = strcat(dataPath, nombreImagenA);
-            ruta_imagenB = strcat(dataPath, nombreImagenB);
-            ImgInicial_A = imread(ruta_imagenA);
-            ImgInicial_B = imread(ruta_imagenB);
-        catch
-            ruta_imagenA = strcat(dataPath, nombreImagenA_H);
-            ruta_imagenB = strcat(dataPath, nombreImagenB_H);
-            ImgInicial_A = imread(ruta_imagenA);
-            ImgInicial_B = imread(ruta_imagenB);
+if(total_muestras > 1)
+    for i = 1:total_muestras
+        %Verifica si la bandera de terminar está activada
+        if get(handles.btn_cancelarSalir,'UserData')
+            delete(h);
+            break
         end
-        ComponenteR = ImgInicial_A(:,:,1);
-        ComponenteG = ImgInicial_A(:,:,2);
-        ComponenteB = ImgInicial_A(:,:,3);
-        estructura_imagen_A.imagen = cat(3, ComponenteR, ComponenteG, ComponenteB);
-        ComponenteR = ImgInicial_B(:,:,1);
-        ComponenteG = ImgInicial_B(:,:,2);
-        ComponenteB = ImgInicial_B(:,:,3);
-        estructura_imagen_B.imagen = cat(3, ComponenteR, ComponenteG, ComponenteB);
-        %redimensiona las imagenes
-        estructura_imagen_A.imagen = imresize(estructura_imagen_A.imagen, [300 NaN]);
-        estructura_imagen_B.imagen = imresize(estructura_imagen_B.imagen, [300 NaN]);
-        %Segmenta las imagenes
-        [estructura_imagen_A.suave, estructura_imagen_A.regiones, modes, regsize, grad, conf]= segmentar(estructura_imagen_A.imagen,hs,hr,minreg);
-        [estructura_imagen_B.suave, estructura_imagen_B.regiones, modes, regsize, grad, conf]= segmentar(estructura_imagen_B.imagen,hs,hr,minreg);
-        %Extrae características
-        umbral_A = calcularUmbral( estructura_imagen_A.suave(:,:,2) );
-        umbral_B = calcularUmbral( estructura_imagen_B.suave(:,:,2) );
-        linea_caracteristicas  = MPAT_DUAL( estructura_imagen_A, umbral_A,estructura_imagen_B, umbral_B, signo );
-        tama = size(linea_caracteristicas);
-        %registra la linea en la matriz de entrenamiento
-        lineaCorta = linea_caracteristicas(1,1:tama(2));
-        matriz_entrenamiento(i,:) = lineaCorta;
-        salidas_esperadas(i) = C;
+        if getappdata(h,'canceling')
+            delete(h);
+            break
+        end
+        %actualiza la barra de espera
+        lnd = ['Processing sample ' int2str(i) ' of ' int2str(total_muestras)];
+        waitbar(i / (total_muestras+3), h, lnd);
+        estructura_imagen_A=struct('imagen',0,'suave',0, 'regiones',0,'features',0,'etiquetas', 0, 'marcas', 0);
+        estructura_imagen_B=struct('imagen',0,'suave',0, 'regiones',0,'features',0,'etiquetas', 0, 'marcas', 0);
+        S = MuestrasPares(i,:);
+        N= S(1);
+        C = S(2);
+        %muestra el número de la muestra siendo procesada
+        disp(N);
+        %Cargar las imagenes
+        %Verifica si ya existe una imagen preprocesada
+        nombreImagenProc = strcat(int2str(N),'-',int2str(C),'.mat');
+        if exist(nombreImagenProc, 'file') == 2
+            load(nombreImagenProc);
+            matriz_entrenamiento(i,:) = lineaCorta;
+            salidas_esperadas(i) = C;
+        else
+            nombreImagenA = strcat(int2str(N),'-',int2str(C),'-A.tif');
+            nombreImagenB = strcat(int2str(N),'-',int2str(C),'-B.tif');
+            nombreImagenA_H = strcat(sprintf('%03d',N),'-',int2str(C),'-A.tif');
+            nombreImagenB_H = strcat(sprintf('%03d',N),'-',int2str(C),'-B.tif');
+            try
+                ruta_imagenA = strcat(dataPath, nombreImagenA);
+                ruta_imagenB = strcat(dataPath, nombreImagenB);
+                ImgInicial_A = imread(ruta_imagenA);
+                ImgInicial_B = imread(ruta_imagenB);
+            catch
+                ruta_imagenA = strcat(dataPath, nombreImagenA_H);
+                ruta_imagenB = strcat(dataPath, nombreImagenB_H);
+                ImgInicial_A = imread(ruta_imagenA);
+                ImgInicial_B = imread(ruta_imagenB);
+            end
+            ComponenteR = ImgInicial_A(:,:,1);
+            ComponenteG = ImgInicial_A(:,:,2);
+            ComponenteB = ImgInicial_A(:,:,3);
+            estructura_imagen_A.imagen = cat(3, ComponenteR, ComponenteG, ComponenteB);
+            ComponenteR = ImgInicial_B(:,:,1);
+            ComponenteG = ImgInicial_B(:,:,2);
+            ComponenteB = ImgInicial_B(:,:,3);
+            estructura_imagen_B.imagen = cat(3, ComponenteR, ComponenteG, ComponenteB);
+            %redimensiona las imagenes
+            estructura_imagen_A.imagen = imresize(estructura_imagen_A.imagen, [300 NaN]);
+            estructura_imagen_B.imagen = imresize(estructura_imagen_B.imagen, [300 NaN]);
+            %Segmenta las imagenes
+            [estructura_imagen_A.suave, estructura_imagen_A.regiones, modes, regsize, grad, conf]= segmentar(estructura_imagen_A.imagen,hs,hr,minreg);
+            [estructura_imagen_B.suave, estructura_imagen_B.regiones, modes, regsize, grad, conf]= segmentar(estructura_imagen_B.imagen,hs,hr,minreg);
+            %Extrae características
+            umbral_A = calcularUmbral( estructura_imagen_A.suave(:,:,2) );
+            umbral_B = calcularUmbral( estructura_imagen_B.suave(:,:,2) );
+            linea_caracteristicas  = MPAT_DUAL( estructura_imagen_A, umbral_A,estructura_imagen_B, umbral_B, signo );
+            tama = size(linea_caracteristicas);
+            %registra la linea en la matriz de entrenamiento
+            lineaCorta = linea_caracteristicas(1,1:tama(2));
+            matriz_entrenamiento(i,:) = lineaCorta;
+            salidas_esperadas(i) = C;
 
-        %Guarda la imagen pre-procesada en un archivo .mat
+            %Guarda la imagen pre-procesada en un archivo .mat
 
-        filename_preproc = strcat(dataPath,nombreImagenProc);
-        save(filename_preproc,'lineaCorta');
+            filename_preproc = strcat(dataPath,nombreImagenProc);
+            save(filename_preproc,'lineaCorta');
+        end
     end
-    
+    waitbar(i+2 / (total_muestras+3), h, 'Exporting results');
 end
-waitbar(i+2 / (total_muestras+3), h, 'Exporting results');
 delete(h);
 % close(main);
 
@@ -515,7 +553,9 @@ function pushbutton3_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton3 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-[FileName]=uigetdir();
+userProfile = getenv('USERPROFILE');
+myDocsFolder = sprintf('%s\\Documents', userProfile);
+[FileName]=uigetdir(myDocsFolder);
 handles.directorio = FileName;
 set(handles.text2, 'String', handles.directorio);
 
@@ -547,7 +587,7 @@ function mostrarTodos_Callback(hObject, eventdata, handles)
 % hObject    handle to mostrarTodos (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles = pupularTabla(handles.StRes, handles.clases, 1:121, handles);
+handles = pupularTabla(handles.StRes, handles.clases, 1:122, handles);
 guidata(hObject, handles);
 
 
@@ -556,7 +596,11 @@ function pushbutton7_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton7 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-[FileName,PathName] = uiputfile('Results.xlsx','Save results');
+userProfile = getenv('USERPROFILE');
+myDocsFolder = sprintf('%s\\Documents', userProfile);
+calibrationFolder = sprintf('%s\\MPATCalibrations', myDocsFolder);
+ResultsPath = sprintf('%s\\Results.xlsx', calibrationFolder);
+[FileName,PathName] = uiputfile('Results.xlsx','Save results',ResultsPath);
 handles.outputfile = [PathName FileName];
 set(handles.text5, 'String', handles.outputfile);
 guidata(hObject, handles);
