@@ -1,5 +1,5 @@
 <deployment-project plugin="plugin.ezdeploy" plugin-version="1.0">
-  <configuration build-checksum="1060821534" file="C:\projects\matlab\aident\mpat\core\App\Perceptodent\Perceptodent.prj" location="C:\projects\matlab\aident\mpat\core\App\Perceptodent" name="Perceptodent" preferred-package-location="C:\projects\matlab\aident\mpat\core\App\Perceptodent\Perceptodent\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
+  <configuration build-checksum="3679510646" file="C:\projects\matlab\aident\mpat\core\App\Perceptodent\Perceptodent.prj" location="C:\projects\matlab\aident\mpat\core\App\Perceptodent" name="Perceptodent" preferred-package-location="C:\projects\matlab\aident\mpat\core\App\Perceptodent\Perceptodent\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
     <param.appname>Perceptodent</param.appname>
     <param.icon>${PROJECT_ROOT}\Perceptodent_resources\icon.ico</param.icon>
     <param.icons>
@@ -8,7 +8,7 @@
       <file>${PROJECT_ROOT}\Perceptodent_resources\icon_24.png</file>
       <file>${PROJECT_ROOT}\Perceptodent_resources\icon_16.png</file>
     </param.icons>
-    <param.version>1.0</param.version>
+    <param.version>1.2</param.version>
     <param.authnamewatermark>Gustavo Vaccaro Witt; José Ignacio Peláez</param.authnamewatermark>
     <param.email>fabianvaccaro@correo.ugr.es</param.email>
     <param.company>University of Malaga</param.company>
@@ -44,7 +44,6 @@
     <param.create.log>false</param.create.log>
     <param.log.file />
     <unset>
-      <param.version />
       <param.guid />
       <param.net.saved.interface />
       <param.installpath.string />
