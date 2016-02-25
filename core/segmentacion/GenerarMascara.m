@@ -31,7 +31,6 @@ euclideas = zeros(tamano(1), tamano(2));
 for i = 1:tamano(1)
    for j = 1:tamano(2)
        d = sqrt((lab(i,j,1)-pLab(1))^2+(lab(i,j,2)-pLab(2))^2+(lab(i,j,3)-pLab(3))^2);
-       %distancias(i,j) = exp(2*d);
        euclideas(i,j) = d;
    end
 end
@@ -43,21 +42,39 @@ w3 = euclideas(H-r:H, W-r:W);
 w4 = euclideas(H-r:H,1:r);
 w = [w1(:) ; w2(:) ; w3(:) ; w4(:)];
 s = std2(w);
+m = mean2(w);
 
 disp(s);
+disp(m);
+
+if(abs(s)>0)
+    zwt = (euclideas - m) / s;
+    %Genera la matriz de distancias relativas
+    distancias = zeros(tamano(1), tamano(2));
+    for i = 1:tamano(1)
+       for j = 1:tamano(2)
+
+           d = zwt(i,j);
+
+           if(d > 1*s)
+               g = log(4*s*d);
+
+           else
+               g = d;
+           end
 
 
-%Genera la matriz de distancias relativas
-distancias = zeros(tamano(1), tamano(2));
-for i = 1:tamano(1)
-   for j = 1:tamano(2)
-       d = euclideas(i,j);
-       distancias(i,j) = log(abs((d-s)*d));
-       if (distancias(i,j) < 0)
-           distancias(i,j) = 0;
+           distancias(i,j) = g;
+
        end
-   end
+    end
+else
+%     zwt = euclideas;
+    distancias = euclideas;
+    distancias(abs(distancias)>0) = 1;
 end
+
+
 
 %Calcular el umbral????
 
@@ -67,12 +84,3 @@ ncols = size(distancias,2);
 ab = reshape(distancias,nrows*ncols,1);
 [clusters_idx, cluster_center] = kmeans(ab, 2, 'distance', 'sqeuclidean','Replicates',3);
 mascara = reshape(clusters_idx,nrows,ncols);
-
-% mascara = zeros(tamano(1), tamano(2));
-% for i = 1:tamano(1)
-%    for j = 1:tamano(2)
-%        if(distancias(i,j) > k)
-%            mascara(i,j) = 1;
-%        end
-%    end
-% end
