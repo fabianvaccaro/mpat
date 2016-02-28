@@ -9,6 +9,8 @@ fvect(1)= mean(input_image);
 %varianza
 fvect(2)=var(double(input_image));
 
+%filtrado 
+input_image = input_image(~isnan(input_image));
 %picos más altos del histograma
 [pmax1,vmax1,pmax2,vmax2]=dosmax(hist(smooth(double(input_image),256)));
 %primer pico más alto
@@ -32,5 +34,8 @@ fvect(9) = entropy(HISTO);
 
 %energía del histograma
 fvect(10) = energia(HISTO);
+
+%control
+disp('paso');
 end
 
