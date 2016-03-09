@@ -56,7 +56,7 @@ if(abs(s)>0)
 
            d = zwt(i,j);
 
-           if(d > 1*s)
+           if(d > s)
                g = log(4*s*d);
 
            else
@@ -84,3 +84,11 @@ ncols = size(distancias,2);
 ab = reshape(distancias,nrows*ncols,1);
 [clusters_idx, cluster_center] = kmeans(ab, 2, 'distance', 'sqeuclidean','Replicates',3);
 mascara = reshape(clusters_idx,nrows,ncols);
+
+
+%selecciona la región central
+BW = im2bw(mascara,1);
+BW = ~BW;
+BW2 = bwselect(BW);
+mascara = BW2;
+

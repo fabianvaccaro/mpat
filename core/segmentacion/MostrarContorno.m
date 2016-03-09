@@ -18,7 +18,7 @@ rgb = imresize(rgb, [300 NaN]);
 rgb = uint8(rgb);
 imshow(rgb);
 hold on;
-contour(mascara, 'LineWidth', 1.5, 'LineColor', 'blue' );
+contour(mascara, 'LineWidth', 1.5, 'LineColor', 'magenta' );
 
 c = unique(distancias(:));
 c = sort(c);
